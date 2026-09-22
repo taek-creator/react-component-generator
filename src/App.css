@@ -328,6 +328,12 @@
   color: var(--ink-soft);
 }
 
+.prompt-error {
+  grid-column: 1 / -1;
+  color: #9c2e24;
+  font-size: 0.85rem;
+}
+
 .btn-generate {
   height: 52px;
   padding: 0 26px;
