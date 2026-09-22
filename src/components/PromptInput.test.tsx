@@ -55,4 +55,24 @@ describe('PromptInput', () => {
 
     expect(onGenerate).not.toHaveBeenCalled();
   });
+
+  it('history가 비어 있으면 최근 프롬프트 섹션을 보여주지 않는다', () => {
+    render(<PromptInput onGenerate={vi.fn()} isLoading={false} history={[]} />);
+    expect(screen.queryByText('최근 프롬프트')).not.toBeInTheDocument();
+  });
+
+  it('history가 있으면 최근 프롬프트 섹션에 목록을 보여준다', () => {
+    render(<PromptInput onGenerate={vi.fn()} isLoading={false} history={['이전 프롬프트 1', '이전 프롬프트 2']} />);
+    expect(screen.getByText('최근 프롬프트')).toBeInTheDocument();
+    expect(screen.getByText('이전 프롬프트 1')).toBeInTheDocument();
+    expect(screen.getByText('이전 프롬프트 2')).toBeInTheDocument();
+  });
+
+  it('최근 프롬프트를 클릭하면 textarea에 값이 채워진다', () => {
+    render(<PromptInput onGenerate={vi.fn()} isLoading={false} history={['재사용할 프롬프트']} />);
+
+    fireEvent.click(screen.getByText('재사용할 프롬프트'));
+
+    expect(screen.getByRole('textbox')).toHaveValue('재사용할 프롬프트');
+  });
 });

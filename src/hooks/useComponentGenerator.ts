@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { GeneratedComponent, Provider } from '../types';
+import { STORAGE_KEYS, loadFromStorage, saveToStorage } from '../utils/storage';
 
 interface UseComponentGeneratorReturn {
   components: GeneratedComponent[];
@@ -10,10 +11,21 @@ interface UseComponentGeneratorReturn {
   clearAll: () => void;
 }
 
+function reviveComponents(raw: unknown): GeneratedComponent[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => ({ ...item, createdAt: new Date(item.createdAt) }));
+}
+
 export function useComponentGenerator(): UseComponentGeneratorReturn {
-  const [components, setComponents] = useState<GeneratedComponent[]>([]);
+  const [components, setComponents] = useState<GeneratedComponent[]>(() =>
+    reviveComponents(loadFromStorage(STORAGE_KEYS.components, []))
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.components, components);
+  }, [components]);
 
   const generate = useCallback(async (prompt: string, apiKey: string | undefined, provider: Provider) => {
     setIsLoading(true);
