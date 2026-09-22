@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { ComponentCard } from './components/ComponentCard';
 import { useComponentGenerator } from './hooks/useComponentGenerator';
+import { useProviderSettings } from './hooks/useProviderSettings';
+import { usePromptHistory } from './hooks/usePromptHistory';
 import type { Provider } from './types';
 import './App.css';
 
@@ -11,15 +13,15 @@ const PROVIDER_CONFIG = {
 } as const;
 
 function App() {
-  const [apiKey, setApiKey] = useState('');
+  const { provider, setProvider, apiKey, setApiKey } = useProviderSettings();
   const [showKey, setShowKey] = useState(false);
-  const [provider, setProvider] = useState<Provider>('google');
   const [envKeys, setEnvKeys] = useState<Record<Provider, boolean>>({
     anthropic: false,
     google: false,
   });
   const { components, isLoading, error, generate, removeComponent, clearAll } =
     useComponentGenerator();
+  const { history, addPrompt } = usePromptHistory();
 
   useEffect(() => {
     fetch('/api/config')
@@ -35,12 +37,8 @@ function App() {
       alert(`${PROVIDER_CONFIG[provider].label} API 키를 입력하거나 .env에 설정해주세요.`);
       return;
     }
+    addPrompt(prompt);
     generate(prompt, apiKey || undefined, provider);
-  };
-
-  const handleProviderChange = (newProvider: Provider) => {
-    setProvider(newProvider);
-    setApiKey('');
   };
 
   const activeProvider = PROVIDER_CONFIG[provider].label;
@@ -70,7 +68,7 @@ function App() {
 
       <main className="workspace">
         <section className="composer-panel" aria-label="컴포넌트 생성">
-          <PromptInput onGenerate={handleGenerate} isLoading={isLoading} />
+          <PromptInput onGenerate={handleGenerate} isLoading={isLoading} history={history} />
         </section>
 
         <aside className="settings-panel" aria-label="실행 설정">
@@ -82,7 +80,7 @@ function App() {
             <select
               id="provider"
               value={provider}
-              onChange={(e) => handleProviderChange(e.target.value as Provider)}
+              onChange={(e) => setProvider(e.target.value as Provider)}
             >
               {Object.entries(PROVIDER_CONFIG).map(([key, { label }]) => (
                 <option key={key} value={key}>
